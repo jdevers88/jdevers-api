@@ -10,9 +10,10 @@ from flask_graphql import GraphQLView
 # app initialization
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+
 app = Flask(__name__)
-app.debug = True
-CORS(app, resources={r"/graphql": {"origins": "http://localhost:4200"}})
+app.debug = False
+CORS(app, resources={r"*": {"origins": "*"}})
 
 # Configs
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' +    os.path.join(basedir, 'data.sqlite')
@@ -49,8 +50,8 @@ class CreateVersion(graphene.Mutation):
         name = graphene.String(required=True)
         number = graphene.String(required=True)
         note = graphene.String(required=False)
-    version = graphene.Field(lambda: VersionObject)
 
+    version = graphene.Field(lambda: VersionObject)
 
     def mutate(self, info, name, number, note):
         version = Version(name=name, number=number, note=note)
@@ -58,8 +59,11 @@ class CreateVersion(graphene.Mutation):
         db.session.commit()
         return CreateVersion(version=version)
 
+
 class Mutation(graphene.ObjectType):
     create_version = CreateVersion.Field()
+
+
 schema = graphene.Schema(query=Query, mutation=Mutation)
 
 # Routes
@@ -71,10 +75,11 @@ app.add_url_rule(
         graphiql=True # for having the GraphiQL interface
     )
 )
-#
-# def index():
-#     return '<p> Hello World</p>'
+
+@app.route("/")
+def index():
+    return '<p> Hello World</p>'
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=5000)
